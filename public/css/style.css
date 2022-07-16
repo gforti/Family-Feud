@@ -11,14 +11,14 @@ body {
   align-items: center;
   justify-content: center;
 }
-.gameBoard .cardHolder>div,
-.gameBoard .LBG {
+.gameBoard .cardHolder>div:empty {
   background: #0403ba;
 }
-.gameBoard .cardHolder>div:empty,
+.gameBoard .cardHolder>div,
 .gameBoard .score,
 .gameBoard .button,
-.gameBoard .DBG.back {
+.gameBoard .DBG.back,
+.gameBoard .LBG {
   background: radial-gradient(circle, rgba(0,89,255,1) 1%, rgba(9,9,121,1) 100%);
 }
 
@@ -28,7 +28,7 @@ body {
 }
 
 .gameBoard {
-  width: 100%;
+  width: 98vw;
   height: 95vh;
   gap: 5px;
   margin: auto;
@@ -218,8 +218,9 @@ body {
 .gameBoard:not(.showHost) .answer{
   display: none !important;
 }
-.showHost .cardHolder .front span{
-  font-size: 20px;
+.showHost .cardHolder .front span,
+.gameBoard .cardHolder .back {
+  font-size: 30px;
 }
 .showHost .cardHolder .front span:nth-child(1) {
   margin: auto 5px;

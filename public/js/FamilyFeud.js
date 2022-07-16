@@ -6,6 +6,7 @@ let app = {
     socket: io.connect(),
     jsonFile: "../public/data/Questions.json",
     currentQ: 0,
+    getCurrentQ: () => app.currentQ,
     wrong: 0,
     flipCardSound: new Audio(`../public/fx/flip.mp3`),
     introSound: new Audio(`../public/fx/intro.mp3`),
@@ -212,10 +213,13 @@ let app = {
             ease: Power3.easeOut
         });
     },
-    changeQuestion: () => {
-        app.makeQuestion(app.currentQ);
-        app.currentQ = (app.currentQ + 1) % app.questions.length;
+    changeQuestion: (currentQ) => {
+        app.makeQuestion(currentQ);
+        if(app.isHost()) {
+            app.currentQ = (app.currentQ + 1) % app.questions.length;
+        }
     },
+    isHost: () => app.role === 'host',
     makeHost: () => {
         app.role = "host";
         app.board.find(".hide").removeClass('hide');
@@ -259,12 +263,14 @@ let app = {
 
     // Socket Test
     talkSocket: (e) => {
-        if (app.role == "host" ||  e.data?.trigger?.toLowerCase().includes('intro')) app.socket.emit("talking", e.data);
+        if (app.isHost() || e.data?.trigger?.toLowerCase().includes('intro')) {
+            app.socket.emit("talking", e.data)
+        }
     },
     listenSocket: (data) => {
         switch (data.trigger) {
             case "newQuestion":
-                app.changeQuestion();
+                app.changeQuestion(data.currentQ);
                 break;
             case "awardTeam1":
                 app.awardPoints(1);
@@ -324,13 +330,14 @@ let app = {
         app.board.find('#hostBTN').on('click', app.makeHost);
         app.board.find('#awardTeam1').on('click', { trigger: 'awardTeam1' }, app.talkSocket);
         app.board.find('#awardTeam2').on('click', { trigger: 'awardTeam2' }, app.talkSocket);
-        app.board.find('#newQuestion').on('click', { trigger: 'newQuestion' }, app.talkSocket);
+        app.board.find('#newQuestion').on('click',() => {
+            app.talkSocket({ data: { trigger: 'newQuestion', currentQ: app.getCurrentQ() } })
+        });
         app.board.find('#wrong1').on('click', { trigger: 'wrong1' }, app.talkSocket);
         app.board.find('#wrong2').on('click', { trigger: 'wrong2' }, app.talkSocket);
         app.board.find('#wrong3').on('click', { trigger: 'wrong3' }, app.talkSocket);
 
         app.socket.on('listening', app.listenSocket)
-
 
 
         let template = $('#starshine .template.shine'),
@@ -367,7 +374,7 @@ let app = {
             if (e.key.toLowerCase() === 'c') {
                 e.preventDefault();
                 e.stopPropagation();
-                if(app.role == "host" && confirm('Clear the board?')) {
+                if(app.isHost() && confirm('Clear the board?')) {
                     app.talkSocket({ data: { trigger: 'clearBoard' } })
                 }
             }
@@ -384,7 +391,7 @@ let app = {
             if (e.key.toLowerCase() === 'n') {
                 e.preventDefault();
                 e.stopPropagation();
-                if(app.role == "host" && confirm('start New game?')) {
+                if(app.isHost() && confirm('start New game?')) {
                     app.talkSocket({ data: { trigger: 'clearScores' } })
                 }
             }

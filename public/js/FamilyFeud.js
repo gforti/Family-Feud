@@ -1,6 +1,6 @@
 console.clear()
 
-var app = {
+let app = {
     version: 1,
     role: "player",
     socket: io.connect(),
@@ -39,7 +39,13 @@ var app = {
                     <div id='hostBTN'     class='button'>Be the host</div>
                     <div id='awardTeam1'  class='button' data-team='1'>Award Team 1</div>
                     <div id='newQuestion' class='button'>New Question</div>
-                    <div id="wrong"       class='button wrongX'>
+                    <div id="wrong1"       class='button wrongX'>
+                        <img alt="not on board" src="/public/img/Wrong.svg"/>
+                    </div>
+                    <div id="wrong2"       class='button wrongX'>
+                        <img alt="not on board" src="/public/img/Wrong.svg"/>
+                    </div>
+                    <div id="wrong3"       class='button wrongX'>
                         <img alt="not on board" src="/public/img/Wrong.svg"/>
                     </div>
                     <div id='awardTeam2'  class='button' data-team='2' >Award Team 2</div>
@@ -49,7 +55,7 @@ var app = {
     
     // Utility functions
     shuffle: (array) => {
-        var currentIndex = array.length,
+        let currentIndex = array.length,
             temporaryValue, randomIndex;
 
         while (0 !== currentIndex) {
@@ -71,30 +77,30 @@ var app = {
 
     // Action functions
     makeQuestion: (eNum) => {
-        var qText = app.questions[eNum];
-        var qAnswr = app.allData[qText];
+        let qText = app.questions[eNum];
+        let qAnswr = app.allData[qText];
 
-        var qNum = qAnswr.length;
+        let qNum = qAnswr.length;
         qNum = (qNum < 8) ? 8 : qNum;
         qNum = (qNum % 2 != 0) ? qNum + 1 : qNum;
 
-        var boardScore = app.board.find("#boardScore");
-        var question = app.board.find(".question");
-        var holderMain = app.board.find(".colHolder");
+        let boardScore = app.board.find("#boardScore");
+        let question = app.board.find(".question");
+        let holderMain = app.board.find(".colHolder");
 
         boardScore.html(0);
         question.html(qText.replace(/&x22;/gi, '"'));
         holderMain.empty();
 
         app.wrong = 0;
-        var wrong = app.board.find(".wrongBoard")
+        let wrong = app.board.find(".wrongBoard")
         $(wrong).find("img").hide()
         $(wrong).hide()
 
         qNum = 10
 
         for (var i = 0; i < qNum; i++) {
-            var aLI;
+            let aLI;
             if (qAnswr[i]) {
                 aLI = $(`<div class='cardHolder'>
                             <div class='card' data-id='${i}'>
@@ -112,7 +118,7 @@ var app = {
                 aLI = $(`<div class='cardHolder empty'><div></div></div>`)
             }
 
-            var parentDiv = holderMain//(i < (qNum / 2)) ? col1 : col2;
+            let parentDiv = holderMain//(i < (qNum / 2)) ? col1 : col2;
             aLI.on('click', {
                 trigger: 'flipCard',
                 num: i
@@ -120,10 +126,10 @@ var app = {
             $(aLI).appendTo(parentDiv)
         }
 
-        var cardHolders = app.board.find('.cardHolder');
-        var cards = app.board.find('.card');
-        var backs = app.board.find('.back');
-        var cardSides = app.board.find('.card>div');
+        let cardHolders = app.board.find('.cardHolder');
+        let cards = app.board.find('.card');
+        let backs = app.board.find('.back');
+        let cardSides = app.board.find('.card>div');
 
         TweenLite.set(cardHolders, {
             perspective: 800
@@ -140,16 +146,16 @@ var app = {
         cards.data("flipped", false);
     },
     getBoardScore: () => {
-        var cards = app.board.find('.card');
-        var boardScore = app.board.find('#boardScore');
-        var currentScore = {
+        let cards = app.board.find('.card');
+        let boardScore = app.board.find('#boardScore');
+        let currentScore = {
             var: boardScore.html()
         };
-        var score = 0;
+        let score = 0;
 
         function tallyScore() {
             if ($(this).data("flipped")) {
-                var value = $(this).find("b").html();
+                let value = $(this).find("b").html();
                 score += parseInt(value)
             }
         }
@@ -163,15 +169,15 @@ var app = {
         });
     },
     awardPoints: (num) => {
-        var boardScore = app.board.find('#boardScore');
-        var currentScore = {
+        let boardScore = app.board.find('#boardScore');
+        let currentScore = {
             var: parseInt(boardScore.html())
         };
-        var team = app.board.find("#team" + num);
-        var teamScore = {
+        let team = app.board.find("#team" + num);
+        let teamScore = {
             var: parseInt(team.html())
         };
-        var teamScoreUpdated = (teamScore.var + currentScore.var);
+        let teamScoreUpdated = (teamScore.var + currentScore.var);
         TweenMax.to(teamScore, 1, {
             var: teamScoreUpdated,
             onUpdate: function () {
@@ -203,9 +209,9 @@ var app = {
     flipCard: (n) => {
         console.log("card");
         console.log(n);
-        var card = $('[data-id="' + n + '"]');
-        var flipped = $(card).data("flipped");
-        var cardRotate = (flipped) ? 0 : -180;
+        let card = $('[data-id="' + n + '"]');
+        let flipped = $(card).data("flipped");
+        let cardRotate = (flipped) ? 0 : -180;
         TweenLite.to(card, 1, {
             rotationX: cardRotate,
             ease: Back.easeOut
@@ -214,14 +220,18 @@ var app = {
         $(card).data("flipped", flipped);
         app.getBoardScore()
     },
-    wrongAnswer:()=>{
-        app.wrong++
+    wrongAnswer:(x)=>{
+        app.wrong = x
         console.log("wrong: "+ app.wrong )
-        var wrong = app.board.find(".wrongBoard")
-        $(wrong).find("img:nth-child("+app.wrong+")").show()
+        let wrong = app.board.find(".wrongBoard")
+        $(wrong).find("img").hide()
+        for (let i = 1; i <= x; i++) {
+            console.log(`img:nth-child(${i})`)
+          $(wrong).find(`img:nth-child(${i})`).show()
+        }
         $(wrong).show()
         setTimeout(() => { 
-            $(wrong).hide(); 
+            $(wrong).hide()
         }, 1000); 
 
     },
@@ -248,8 +258,14 @@ var app = {
             case "hostAssigned":
                 app.board.find('#hostBTN').remove();
                 break;
-            case "wrong":
-                app.wrongAnswer()
+            case "wrong1":
+                app.wrongAnswer(1)
+                break;
+            case "wrong2":
+                app.wrongAnswer(2)
+                break;
+            case "wrong3":
+                app.wrongAnswer(3)
                 break;
         }
     },
@@ -263,7 +279,9 @@ var app = {
         app.board.find('#awardTeam1' ).on('click', { trigger: 'awardTeam1' }, app.talkSocket);
         app.board.find('#awardTeam2' ).on('click', { trigger: 'awardTeam2' }, app.talkSocket);
         app.board.find('#newQuestion').on('click', { trigger: 'newQuestion'}, app.talkSocket);
-        app.board.find('#wrong'      ).on('click', { trigger: 'wrong'      }, app.talkSocket);
+        app.board.find('#wrong1'      ).on('click', { trigger: 'wrong1'      }, app.talkSocket);
+        app.board.find('#wrong2'      ).on('click', { trigger: 'wrong2'      }, app.talkSocket);
+        app.board.find('#wrong3'      ).on('click', { trigger: 'wrong3'      }, app.talkSocket);
 
         app.socket.on('listening', app.listenSocket)
     }

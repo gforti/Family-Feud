@@ -37,7 +37,7 @@ body {
 .gameBoard {
   width: 100%;
   height: 95vh;
-  gap: 10px;
+  gap: 5px;
   margin: auto;
   display: grid;
   grid-template-areas: 
@@ -74,6 +74,8 @@ body {
 }
 .gameBoard #boardScore {
   grid-area: scoreM;
+  font-size: 70px;
+  width: 150px;
 }
 .gameBoard #team1 {
   grid-area: scoreT1;
@@ -197,12 +199,13 @@ body {
 }
 .gameBoard .button{
   cursor: pointer;
-  display:inline-block;
+  display: flex;
+  justify-content: center;
+  align-items: center;
   font-size: 20px;
   margin:10px;
+  padding:10px;
   height:50px;
-  line-height:50px;
-  width:175px;
   border:3px solid white;
   -webkit-box-shadow: 0 1px 24px 1px rgba(0, 0, 0, 0.48);
   -moz-box-shadow: 0 1px 24px 1px rgba(0, 0, 0, 0.48);
@@ -250,13 +253,11 @@ body {
   box-sizing: border-box;
   display: inline-block;
 }
-.showHost #wrong img{
+.showHost #wrong1 img,
+.showHost #wrong2 img,
+.showHost #wrong3 img {
   height: 100%;
-  width: 100%;
   padding: 5px;
   box-sizing: border-box;
   display: inline-block;
-}
-.showHost #wrong {
-width: 75px;
 }

@@ -23,7 +23,8 @@ body {
 }
 
 .gameBoard .DBG,
-.gameBoard .LBG {
+.gameBoard .LBG,
+#middleBoard > div.colHolder > div > div > div.front > span.DBG {
   background: radial-gradient(circle, rgb(10, 60, 153) 1%, rgba(9,9,121,1) 100%);
 }
 
@@ -128,10 +129,10 @@ body {
 .gameBoard .cardHolder {
   position: relative;
   vertical-align: top;
-  height: 50px;
+  height: 70px;
   background: black;
   border: 4px solid white;
-  display: block;
+  display: flex;
   -webkit-box-shadow: 0 1px 24px 1px rgba(0, 0, 0, 0.48);
   -moz-box-shadow: 0 1px 24px 1px rgba(0, 0, 0, 0.48);
   box-shadow: 0 1px 24px 1px rgba(0, 0, 0, 0.48);
@@ -139,16 +140,14 @@ body {
 .gameBoard .cardHolder:not(.empty){
   cursor: pointer;
 }
-.gameBoard .cardHolder b {
-  position: absolute;
-  right: 0;
-  width: 45px;
+.gameBoard .cardHolder .LBG {
+  font-weight: bold;
+  width: 50px;
   text-align: center;
   border-left: 2px solid #003c7b;
+  align-self: flex-end;
 }
-.gameBoard .cardHolder span {
-  margin: 10px;
-}
+
 .gameBoard .cardHolder>div {
   top: -2px;
   left: -2px;
@@ -162,26 +161,29 @@ body {
   line-height: 50px;
 }
 .gameBoard .cardHolder .back {
-  font-size: 25px;
+  font-size: 30px;
   text-align: left;
-  height: 50px;
-  line-height: 50px;
+  height: 70px;
+  line-height: 70px;
+  display: flex;
+  align-items: center;
 }
 .gameBoard .cardHolder .back span {
-  text-align: left;
   display: inline-block;
   vertical-align: middle;
   line-height: normal;
+  flex-grow: 1;
+  text-align: center;
 }
 .gameBoard .cardHolder .front {
   text-align: center;
 }
 .gameBoard .cardHolder .front span {
-  font-size: 30px;
+  font-size: 40px;
   position: absolute;
   border-radius: 50%;
-  line-height: 35px;
-  height: 35px;
+  line-height: 45px;
+  height: 45px;
   width: 45px;
   left: 0;
   right: 0;
@@ -220,7 +222,14 @@ body {
 }
 .showHost .cardHolder .front span,
 .gameBoard .cardHolder .back {
-  font-size: 30px;
+  font-size: 35px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.DBG,
+#middleBoard > div.colHolder > div > div > div.front > span.DBG {
+  justify-content: center;
 }
 .showHost .cardHolder .front span:nth-child(1) {
   margin: auto 5px;
@@ -262,6 +271,7 @@ body {
 
 .es {
   color: blue;
+  font-size: 38px;
 }
 /**Logo**/
 

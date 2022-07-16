@@ -291,6 +291,21 @@ let app = {
             case "clearBoard":
                 app.makeQuestion(-1)
                 break;
+            case "clearScores":
+                app.board.find("#team1").html("0")
+                app.board.find("#team2").html("0")
+                break;
+            case "toggleIntroMusic":
+                if(app.introSound.paused) {
+                    app.introSound.play()
+                    app.introSound.currentTime = 0
+                } else {
+                    app.introSound.pause()
+                }
+                break;
+            case "toggleIntro":
+                app.toggleIntro()
+                break;
         }
     },
 
@@ -352,23 +367,26 @@ let app = {
             if (e.key.toLowerCase() === 'c') {
                 e.preventDefault();
                 e.stopPropagation();
-                app.talkSocket({ data: { trigger: 'clearBoard' } })
+                if(app.role == "host" && confirm('Clear the board?')) {
+                    app.talkSocket({ data: { trigger: 'clearBoard' } })
+                }
             }
             if (e.key.toLowerCase() === 'm') {
                 e.preventDefault();
                 e.stopPropagation();
-                if(app.introSound.paused) {
-                    app.introSound.play()
-                    app.introSound.currentTime = 0
-                } else {
-                    app.introSound.pause()
-                }
-                    
+                app.talkSocket({ data: { trigger: 'toggleIntroMusic' } })                    
             }
             if (e.key.toLowerCase() === 'i') {
                 e.preventDefault();
                 e.stopPropagation();
-                app.toggleIntro()
+                app.talkSocket({ data: { trigger: 'toggleIntro' } }) 
+            }
+            if (e.key.toLowerCase() === 'n') {
+                e.preventDefault();
+                e.stopPropagation();
+                if(app.role == "host" && confirm('start New game?')) {
+                    app.talkSocket({ data: { trigger: 'clearScores' } })
+                }
             }
         })
     }

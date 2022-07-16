@@ -1,4 +1,6 @@
 {
-    "Name a biblical hero you'd most like to have as a friend.<br /><span class='es'>Nombre un héroe bíblico que más le gustaría tener como amigo.</span>":[["Jesus","63"],["David","7"],["Noah","5"],["Moses","4"],["Abraham","4"],["Joseph","3"],["Gideon","2"]],
+    "<span class='es'>Nombre un héroe bíblico que más le gustaría tener como amigo.</span><br />Name a biblical hero you'd most like to have as a friend.":[["Jesus","63"],["David","7"],["Noah","5"],["Moses","4"],["Abraham","4"],["Joseph","3"],["Gideon","2"]],
+    "Name something you haven't done since high school gym class.":[["Run a mile","25"],["Dodgeball","23"],["Push-ups","21"],["Sit-ups/crunches","9"],["Lift weights","8"],["Swim laps","5"],["Change in a locker room","3"],["Tennis","2"]],
+    "Tell me something many people do just once a week.":[["Church","35"],["Groceries/shopping","24"],["Laundry","12"],["Clean the house","6"],["Sleep in","6"],["Eat out","6"]],
     "Name something, besides yourself, that you wash":[["Car","43"],["Clothes","40"],["Dishes","14"],["Windows","2"]]
 }

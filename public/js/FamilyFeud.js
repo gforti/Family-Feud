@@ -7,6 +7,13 @@ let app = {
     jsonFile: "../public/data/FamilyFeud_Questions.json",
     currentQ: 0,
     wrong: 0,
+    flipCardSound: new Audio(`../public/fx/flip.mp3`),
+    introSound: new Audio(`../public/fx/intro.mp3`),
+    newSurveySound: new Audio(`../public/fx/new.m4a`),
+    pointsSound: new Audio(`../public/fx/points.mp3`),
+    strikeSound: new Audio(`../public/fx/strike.wav`),
+    starShine: $('#starshine'),
+    starShine2: $('#starshine2'),
     board: $(`<div class='gameBoard'>
 
                 <!--- Scores --->
@@ -77,6 +84,9 @@ let app = {
 
     // Action functions
     makeQuestion: (eNum) => {
+        if(eNum > -1) {
+            app.newSurveySound.play()
+        }
         let qText = app.questions[eNum] ?? '';
         let qAnswr = app.allData[qText] ?? '';
 
@@ -97,7 +107,7 @@ let app = {
         $(wrong).find("img").hide()
         $(wrong).hide()
 
-        qNum = 10
+        qNum = 8
 
         for (var i = 0; i < qNum; i++) {
             let aLI;
@@ -124,6 +134,7 @@ let app = {
                 num: i
             }, app.talkSocket);
             $(aLI).appendTo(parentDiv)
+            $('.cardHolder').hide().show('slow')
         }
 
         let cardHolders = app.board.find('.cardHolder');
@@ -177,6 +188,13 @@ let app = {
         let teamScore = {
             var: parseInt(team.html())
         };
+        if(currentScore.var > 0) {
+            app.pointsSound.play()
+            app.starShine2.show()
+            setTimeout(() => {
+                app.starShine2.hide()
+            }, 4000)
+        }
         let teamScoreUpdated = (teamScore.var + currentScore.var);
         TweenMax.to(teamScore, 1, {
             var: teamScoreUpdated,
@@ -212,6 +230,9 @@ let app = {
         console.log(n);
         let card = $('[data-id="' + n + '"]');
         let flipped = $(card).data("flipped");
+        if(undefined !== flipped && !flipped) {
+            app.flipCardSound.play()
+        }
         let cardRotate = (flipped) ? 0 : -180;
         TweenLite.to(card, 1, {
             rotationX: cardRotate,
@@ -222,6 +243,7 @@ let app = {
         app.getBoardScore()
     },
     wrongAnswer: (x) => {
+        app.strikeSound.play()
         app.wrong = x
         let wrong = app.board.find(".wrongBoard")
         $(wrong).find("img").hide()
@@ -240,7 +262,6 @@ let app = {
         if (app.role == "host" ||  e.data?.trigger?.toLowerCase().includes('intro')) app.socket.emit("talking", e.data);
     },
     listenSocket: (data) => {
-        console.log(data);
         switch (data.trigger) {
             case "newQuestion":
                 app.changeQuestion();
@@ -274,7 +295,10 @@ let app = {
     },
 
     closeIntro: () => {
-        $('#starshine').hide('slow')
+        app.starShine.hide('slow')
+    },
+    toggleIntro: () => {
+        app.starShine.toggle('slow')
     },
 
     // Inital function
@@ -294,25 +318,28 @@ let app = {
 
 
 
-        let $starShine = $('#starshine'),
-            template = $('.template.shine'),
+        let template = $('#starshine .template.shine'),
+            template2 = $('#starshine2 .template.shine'),
             stars = 10,
             sparkle = 10;
 
 
         let size = 'large';
-        let createStar = function () {
-            template.clone().removeAttr('id').css({
+        let createStar = function (temp, star, sparkle) {
+            temp.clone().removeAttr('id').css({
                 top: (Math.random() * 100) + '%',
                 left: (Math.random() * 100) + '%',
                 webkitAnimationDelay: (Math.random() * sparkle) + 's',
                 mozAnimationDelay: (Math.random() * sparkle) + 's'
-            }).addClass(size).appendTo($starShine);
+            }).addClass(size).appendTo(star);
         };
 
         for (var i = 0; i < stars; i++) {
-            createStar();
+            createStar(template, app.starShine, sparkle);
+            createStar(template2, app.starShine2, 0);
         }
+
+        app.starShine2.hide()
 
 
         //hotKey
@@ -326,6 +353,22 @@ let app = {
                 e.preventDefault();
                 e.stopPropagation();
                 app.talkSocket({ data: { trigger: 'clearBoard' } })
+            }
+            if (e.key.toLowerCase() === 'm') {
+                e.preventDefault();
+                e.stopPropagation();
+                if(app.introSound.paused) {
+                    app.introSound.play()
+                    app.introSound.currentTime = 0
+                } else {
+                    app.introSound.pause()
+                }
+                    
+            }
+            if (e.key.toLowerCase() === 'i') {
+                e.preventDefault();
+                e.stopPropagation();
+                app.toggleIntro()
             }
         })
     }

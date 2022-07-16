@@ -13,25 +13,24 @@ npm start
 
 Terminal should respond with:
 
-```bash
-Listening on 8080
+```sh
+Listening on 9090
 ```
+
+### HotKeys
+
+| Key | Description |
+| --- | ----------- |
+| m | Toggle intro music |
+| i | Toggle intro screen |
+| s | Start the game as the Host |
+| c | Clear the board with nothing |
 
 ## Play Family Feud
 
-* Open two browser windows at http://localhost:8080/
+* Open two browser windows at http://localhost:9090/
 * Click **Be the host** to assign that window to become the game **host controller**. All other open instances will become the **audiance window** window. 
 * As the **host** you can:
    * click to reveal answers
    * assign points
    * go to new questions
-
-### Default instance:
-![Default instance](public/img/Default.jpg)
-
-### Host instance:
-![Host instance](public/img/Host.jpg)
-
-### Audience instance:
-![Host instance](public/img/Audience.jpg)
-

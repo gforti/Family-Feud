@@ -260,7 +260,9 @@ body {
   display: inline-block;
 }
 
-
+.es {
+  color: blue;
+}
 /**Logo**/
 
 .shiny

@@ -4,7 +4,7 @@ let app = {
     version: 1,
     role: "player",
     socket: io.connect(),
-    jsonFile: "../public/data/FamilyFeud_Questions.json",
+    jsonFile: "../public/data/Questions.json",
     currentQ: 0,
     wrong: 0,
     flipCardSound: new Audio(`../public/fx/flip.mp3`),
@@ -213,8 +213,8 @@ let app = {
         });
     },
     changeQuestion: () => {
-        app.currentQ++;
         app.makeQuestion(app.currentQ);
+        app.currentQ = (app.currentQ + 1) % app.questions.length;
     },
     makeHost: () => {
         app.role = "host";

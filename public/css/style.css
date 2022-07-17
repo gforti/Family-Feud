@@ -222,10 +222,12 @@ body {
 }
 .showHost .cardHolder .front span,
 .gameBoard .cardHolder .back {
-  font-size: 35px;
+  font-size: 32px;
   display: flex;
   align-items: center;
   justify-content: space-between;
+  overflow: hidden;
+  text-transform: capitalize;
 }
 .DBG,
 #middleBoard > div.colHolder > div > div > div.front > span.DBG {

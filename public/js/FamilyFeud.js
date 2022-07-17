@@ -8,6 +8,7 @@ let app = {
     currentQ: 0,
     getCurrentQ: () => app.currentQ,
     wrong: 0,
+    againSound: new Audio(`../public/fx/again.mp3`),
     flipCardSound: new Audio(`../public/fx/flip.mp3`),
     introSound: new Audio(`../public/fx/intro.mp3`),
     newSurveySound: new Audio(`../public/fx/new.m4a`),
@@ -47,6 +48,7 @@ let app = {
                     <div id='hostBTN'     class='button'>Be the host</div>
                     <div id='awardTeam1'  class='button' data-team='1'>Award Team 1</div>
                     <div id='newQuestion' class='button'>New Question</div>
+                    <div id='againSound' class='button'>Again 🔈</div>
                     <div id="wrong1"       class='button wrongX'>
                         <img alt="not on board" src="/public/img/Wrong.svg"/>
                     </div>
@@ -312,6 +314,9 @@ let app = {
             case "toggleIntro":
                 app.toggleIntro()
                 break;
+            case "againSound":
+                app.againSound.play()
+                break;
         }
     },
 
@@ -333,6 +338,7 @@ let app = {
         app.board.find('#newQuestion').on('click',() => {
             app.talkSocket({ data: { trigger: 'newQuestion', currentQ: app.getCurrentQ() } })
         });
+        app.board.find('#againSound').on('click', { trigger: 'againSound' }, app.talkSocket);
         app.board.find('#wrong1').on('click', { trigger: 'wrong1' }, app.talkSocket);
         app.board.find('#wrong2').on('click', { trigger: 'wrong2' }, app.talkSocket);
         app.board.find('#wrong3').on('click', { trigger: 'wrong3' }, app.talkSocket);

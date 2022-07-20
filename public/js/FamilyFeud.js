@@ -182,14 +182,21 @@ let app = {
             ease: Power3.easeOut
         });
     },
-    awardPoints: (num) => {
+    getTeamPoints: (num) => {
+        let boardScore = app.board.find('#boardScore');
+        let currentScore = parseInt(boardScore.html())
+        let team = app.board.find("#team" + num);
+        let teamScore = parseInt(team.html())
+        return {teamScore, currentScore}
+    },
+    awardPoints: (num, points) => {
         let boardScore = app.board.find('#boardScore');
         let currentScore = {
-            var: parseInt(boardScore.html())
+            var: parseInt(points.currentScore)
         };
         let team = app.board.find("#team" + num);
         let teamScore = {
-            var: parseInt(team.html())
+            var: parseInt(points.teamScore)
         };
         if(currentScore.var > 0) {
             app.pointsSound.play()
@@ -275,10 +282,10 @@ let app = {
                 app.changeQuestion(data.currentQ);
                 break;
             case "awardTeam1":
-                app.awardPoints(1);
+                app.awardPoints(1, data.points);
                 break;
             case "awardTeam2":
-                app.awardPoints(2);
+                app.awardPoints(2, data.points);
                 break;
             case "flipCard":
                 app.flipCard(data.num);
@@ -333,8 +340,12 @@ let app = {
         $.getJSON(app.jsonFile, app.jsonLoaded);
 
         app.board.find('#hostBTN').on('click', app.makeHost);
-        app.board.find('#awardTeam1').on('click', { trigger: 'awardTeam1' }, app.talkSocket);
-        app.board.find('#awardTeam2').on('click', { trigger: 'awardTeam2' }, app.talkSocket);
+        app.board.find('#awardTeam1').on('click', () => { 
+            app.talkSocket({ data: { trigger: 'awardTeam1', points: app.getTeamPoints(1) } })
+        });
+        app.board.find('#awardTeam2').on('click', () => { 
+            app.talkSocket({ data: { trigger: 'awardTeam2', points: app.getTeamPoints(2) } })
+        });
         app.board.find('#newQuestion').on('click',() => {
             app.talkSocket({ data: { trigger: 'newQuestion', currentQ: app.getCurrentQ() } })
         });

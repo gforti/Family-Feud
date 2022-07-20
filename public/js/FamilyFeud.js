@@ -49,6 +49,11 @@ let app = {
                     <div id='awardTeam1'  class='button' data-team='1'>Award Team 1</div>
                     <div id='newQuestion' class='button'>New Question</div>
                     <div id='againSound' class='button'>Again 🔈</div>
+                    <div class='button flex-col'>
+                        <span>Points</span>
+                        <label for="doublePoints"><input id="doublePoints" type="checkbox" />X2</label>
+                        <label for="tripplePoints"><input id="tripplePoints" type="checkbox" />X3</label>
+                    </div>
                     <div id="wrong1"       class='button wrongX'>
                         <img alt="not on board" src="/public/img/Wrong.svg"/>
                     </div>
@@ -185,6 +190,13 @@ let app = {
     getTeamPoints: (num) => {
         let boardScore = app.board.find('#boardScore');
         let currentScore = parseInt(boardScore.html())
+        const doublePoints = !!app.board.find('#doublePoints').is(':checked')
+        const tripplePoints = !!app.board.find('#tripplePoints').is(':checked')
+        if(tripplePoints){
+            currentScore = currentScore * 3
+        } else if(doublePoints){
+            currentScore = currentScore * 2
+        } 
         let team = app.board.find("#team" + num);
         let teamScore = parseInt(team.html())
         return {teamScore, currentScore}

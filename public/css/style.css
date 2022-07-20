@@ -11,6 +11,10 @@ body {
   align-items: center;
   justify-content: center;
 }
+.flex-col {
+  display: flex;
+  flex-direction: column;
+}
 .gameBoard .cardHolder>div:empty {
   background: #0403ba;
 }

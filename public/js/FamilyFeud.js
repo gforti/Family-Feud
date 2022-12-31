@@ -1,22 +1,37 @@
 console.clear()
 
+function strip(html, spanish = false) {
+  const doc = new DOMParser().parseFromString(html, 'text/html');
+  let text = ''
+  if(app.shouldSpeakSpanish) {
+    text =  doc.body.querySelector('span').textContent.trim() ?? ""
+  } else {
+    if(doc.body.querySelector('span')) doc.body.querySelector('span').remove()
+    text =  doc.body.textContent.trim() ?? ""
+  }
+  return  text;
+}
+
 let app = {
-    version: 1,
-    role: "player",
-    socket: io.connect(),
-    jsonFile: "../public/data/Questions.json",
-    currentQ: 0,
-    getCurrentQ: () => app.currentQ,
-    wrong: 0,
-    againSound: new Audio(`../public/fx/again.mp3`),
-    flipCardSound: new Audio(`../public/fx/flip.mp3`),
-    introSound: new Audio(`../public/fx/intro.mp3`),
-    newSurveySound: new Audio(`../public/fx/new.m4a`),
-    pointsSound: new Audio(`../public/fx/points.mp3`),
-    strikeSound: new Audio(`../public/fx/strike.wav`),
-    starShine: $('#starshine'),
-    starShine2: $('#starshine2'),
-    board: $(`<div class='gameBoard'>
+  version: 1,
+  role: "player",
+  socket: io.connect(),
+  jsonFile: "../public/data/new-years.json",
+  currentQ: 0,
+  getCurrentQ: () => app.currentQ,
+  wrong: 0,
+  againSound: new Audio(`../public/fx/again.mp3`),
+  flipCardSound: new Audio(`../public/fx/flip.mp3`),
+  introSound: new Audio(`../public/fx/intro.mp3`),
+  newSurveySound: new Audio(`../public/fx/new.m4a`),
+  pointsSound: new Audio(`../public/fx/points.mp3`),
+  strikeSound: new Audio(`../public/fx/strike.wav`),
+  shouldSpeak : true,
+  shouldSpeakSpanish : false,
+  roundInProgress: false,
+  starShine: $('#starshine'),
+  starShine2: $('#starshine2'),
+  board: $(`<div class='gameBoard'>
 
                 <!--- Scores --->
                 <div class='score' id='boardScore'>0</div>
@@ -54,6 +69,10 @@ let app = {
                         <label for="doublePoints"><input id="doublePoints" type="checkbox" />X2</label>
                         <label for="tripplePoints"><input id="tripplePoints" type="checkbox" />X3</label>
                     </div>
+                    <div class='button flex-col'>
+                      <label for="speech"><input id="speech" type="checkbox" checked />Speak</label>
+                      <label for="spanish"><input id="spanish" type="checkbox" />ES</label>
+                  </div>
                     <div id="wrong1"       class='button wrongX'>
                         <img alt="not on board" src="/public/img/Wrong.svg"/>
                     </div>
@@ -68,59 +87,81 @@ let app = {
 
                 </div>`),
 
-    // Utility functions
-    shuffle: (array) => {
-        let currentIndex = array.length,
-            temporaryValue, randomIndex;
+  // Utility functions
+  shuffle: (array) => {
+    let currentIndex = array.length,
+      temporaryValue, randomIndex;
 
-        while (0 !== currentIndex) {
-            randomIndex = Math.floor(Math.random() * currentIndex);
-            currentIndex -= 1;
-            temporaryValue = array[currentIndex];
-            array[currentIndex] = array[randomIndex];
-            array[randomIndex] = temporaryValue;
+    while (0 !== currentIndex) {
+      randomIndex = Math.floor(Math.random() * currentIndex);
+      currentIndex -= 1;
+      temporaryValue = array[currentIndex];
+      array[currentIndex] = array[randomIndex];
+      array[randomIndex] = temporaryValue;
+    }
+    return array;
+  },
+  jsonLoaded: (data) => {
+    app.allData = data;
+    app.questions = Object.keys(data);
+    app.makeQuestion(-1);
+    app.board.find('.host').hide();
+    $('body').append(app.board);
+  },
+
+  // Action functions
+  makeQuestion: (eNum) => {
+    if (eNum > -1) {
+      if(!app.isHost()) app.newSurveySound.play()
+    }
+    let qText = app.questions[eNum] ?? '';
+    let qAnswr = app.allData[qText] ?? '';
+
+    let qNum = qAnswr.length;
+    qNum = (qNum < 8) ? 8 : qNum;
+    qNum = (qNum % 2 != 0) ? qNum + 1 : qNum;
+
+    let boardScore = app.board.find("#boardScore");
+    let question = app.board.find(".question");
+    let holderMain = app.board.find(".colHolder");
+
+    boardScore.html(0);
+    if(!app.isHost()) {
+      question.hide()
+    } else {
+      question.show()
+    }
+    question.html(qText.replace(/&x22;/gi, '"'));
+
+    holderMain.empty();
+
+
+    if (eNum > -1) {
+      app.newSurveySound.onended = function (e) {
+        question.show('slow')
+        if(app.shouldSpeak) {
+          const utterText = strip(qText)
+          const utter = new SpeechSynthesisUtterance(utterText)
+          utter.lang = app.shouldSpeakSpanish ? 'es' : 'en-US'
+          utter.rate = 0.8
+
+          globalThis.speechSynthesis.speak(utter)
         }
-        return array;
-    },
-    jsonLoaded: (data) => {
-        app.allData = data;
-        app.questions = Object.keys(data);
-        app.makeQuestion(-1);
-        app.board.find('.host').hide();
-        $('body').append(app.board);
-    },
+      }
+    }
 
-    // Action functions
-    makeQuestion: (eNum) => {
-        if(eNum > -1) {
-            app.newSurveySound.play()
-        }
-        let qText = app.questions[eNum] ?? '';
-        let qAnswr = app.allData[qText] ?? '';
 
-        let qNum = qAnswr.length;
-        qNum = (qNum < 8) ? 8 : qNum;
-        qNum = (qNum % 2 != 0) ? qNum + 1 : qNum;
+    app.wrong = 0;
+    let wrong = app.board.find(".wrongBoard")
+    $(wrong).find("img").hide()
+    $(wrong).hide()
 
-        let boardScore = app.board.find("#boardScore");
-        let question = app.board.find(".question");
-        let holderMain = app.board.find(".colHolder");
+    qNum = 8
 
-        boardScore.html(0);
-        question.html(qText.replace(/&x22;/gi, '"'));
-        holderMain.empty();
-
-        app.wrong = 0;
-        let wrong = app.board.find(".wrongBoard")
-        $(wrong).find("img").hide()
-        $(wrong).hide()
-
-        qNum = 8
-
-        for (var i = 0; i < qNum; i++) {
-            let aLI;
-            if (qAnswr[i]) {
-                aLI = $(`<div class='cardHolder'>
+    for (var i = 0; i < qNum; i++) {
+      let aLI;
+      if (qAnswr[i]) {
+        aLI = $(`<div class='cardHolder'>
                             <div class='card' data-id='${i}'>
                                 <div class='front'>
                                     <span class='DBG'>${(i + 1)}</span>
@@ -132,299 +173,322 @@ let app = {
                                 </div>
                             </div>
                         </div>`)
-            } else {
-                aLI = $(`<div class='cardHolder empty'><div></div></div>`)
-            }
+      } else {
+        aLI = $(`<div class='cardHolder empty'><div></div></div>`)
+      }
 
-            let parentDiv = holderMain//(i < (qNum / 2)) ? col1 : col2;
-            aLI.on('click', {
-                trigger: 'flipCard',
-                num: i
-            }, app.talkSocket);
-            $(aLI).appendTo(parentDiv)
-            $('.cardHolder').hide().show('slow')
-        }
-
-        let cardHolders = app.board.find('.cardHolder');
-        let cards = app.board.find('.card');
-        let backs = app.board.find('.back');
-        let cardSides = app.board.find('.card>div');
-
-        TweenLite.set(cardHolders, {
-            perspective: 800
-        });
-        TweenLite.set(cards, {
-            transformStyle: "preserve-3d"
-        });
-        TweenLite.set(backs, {
-            rotationX: 180
-        });
-        TweenLite.set(cardSides, {
-            backfaceVisibility: "hidden"
-        });
-        cards.data("flipped", false);
-    },
-    getBoardScore: () => {
-        let cards = app.board.find('.card');
-        let boardScore = app.board.find('#boardScore');
-        let currentScore = {
-            var: boardScore.html()
-        };
-        let score = 0;
-
-        function tallyScore() {
-            if ($(this).data("flipped")) {
-                let value = $(this).find("b").html();
-                score += parseInt(value)
-            }
-        }
-        $.each(cards, tallyScore);
-        TweenMax.to(currentScore, 1, {
-            var: score,
-            onUpdate: function () {
-                boardScore.html(Math.round(currentScore.var));
-            },
-            ease: Power3.easeOut
-        });
-    },
-    getTeamPoints: (num) => {
-        let boardScore = app.board.find('#boardScore');
-        let currentScore = parseInt(boardScore.html())
-        const doublePoints = !!app.board.find('#doublePoints').is(':checked')
-        const tripplePoints = !!app.board.find('#tripplePoints').is(':checked')
-        if(tripplePoints){
-            currentScore = currentScore * 3
-        } else if(doublePoints){
-            currentScore = currentScore * 2
-        } 
-        let team = app.board.find("#team" + num);
-        let teamScore = parseInt(team.html())
-        return {teamScore, currentScore}
-    },
-    awardPoints: (num, points) => {
-        let boardScore = app.board.find('#boardScore');
-        let currentScore = {
-            var: parseInt(points.currentScore)
-        };
-        let team = app.board.find("#team" + num);
-        let teamScore = {
-            var: parseInt(points.teamScore)
-        };
-        if(currentScore.var > 0) {
-            app.pointsSound.play()
-            app.starShine2.show()
-            setTimeout(() => {
-                app.starShine2.hide()
-            }, 4000)
-        }
-        let teamScoreUpdated = (teamScore.var + currentScore.var);
-        TweenMax.to(teamScore, 1, {
-            var: teamScoreUpdated,
-            onUpdate: function () {
-                team.html(Math.round(teamScore.var));
-            },
-            ease: Power3.easeOut
-        });
-
-        TweenMax.to(currentScore, 1, {
-            var: 0,
-            onUpdate: function () {
-                boardScore.html(Math.round(currentScore.var));
-            },
-            ease: Power3.easeOut
-        });
-    },
-    changeQuestion: (currentQ) => {
-        app.makeQuestion(currentQ);
-        if(app.isHost()) {
-            app.currentQ = (app.currentQ + 1) % app.questions.length;
-        }
-    },
-    isHost: () => app.role === 'host',
-    makeHost: () => {
-        app.role = "host";
-        app.board.find(".hide").removeClass('hide');
-        app.board.addClass('showHost');
-        app.closeIntro()
-        app.socket.emit("talking", {
-            trigger: 'hostAssigned'
-        });
-    },
-    flipCard: (n) => {
-        console.log("card");
-        console.log(n);
-        let card = $('[data-id="' + n + '"]');
-        let flipped = $(card).data("flipped");
-        if(undefined !== flipped && !flipped) {
-            app.flipCardSound.play()
-        }
-        let cardRotate = (flipped) ? 0 : -180;
-        TweenLite.to(card, 1, {
-            rotationX: cardRotate,
-            ease: Back.easeOut
-        });
-        flipped = !flipped;
-        $(card).data("flipped", flipped);
-        app.getBoardScore()
-    },
-    wrongAnswer: (x) => {
-        app.strikeSound.play()
-        app.wrong = x
-        let wrong = app.board.find(".wrongBoard")
-        $(wrong).find("img").hide()
-        for (let i = 1; i <= x; i++) {
-            $(wrong).find(`img:nth-child(${i})`).show()
-        }
-        $(wrong).show()
-        setTimeout(() => {
-            $(wrong).hide()
-        }, 1000);
-
-    },
-
-    // Socket Test
-    talkSocket: (e) => {
-        if (app.isHost() || e.data?.trigger?.toLowerCase().includes('intro')) {
-            app.socket.emit("talking", e.data)
-        }
-    },
-    listenSocket: (data) => {
-        switch (data.trigger) {
-            case "newQuestion":
-                app.changeQuestion(data.currentQ);
-                break;
-            case "awardTeam1":
-                app.awardPoints(1, data.points);
-                break;
-            case "awardTeam2":
-                app.awardPoints(2, data.points);
-                break;
-            case "flipCard":
-                app.flipCard(data.num);
-                break;
-            case "hostAssigned":
-                app.board.find('#hostBTN').remove();
-                app.closeIntro()
-                break;
-            case "wrong1":
-                app.wrongAnswer(1)
-                break;
-            case "wrong2":
-                app.wrongAnswer(2)
-                break;
-            case "wrong3":
-                app.wrongAnswer(3)
-                break;
-            case "clearBoard":
-                app.makeQuestion(-1)
-                break;
-            case "clearScores":
-                app.board.find("#team1").html("0")
-                app.board.find("#team2").html("0")
-                break;
-            case "toggleIntroMusic":
-                if(app.introSound.paused) {
-                    app.introSound.play()
-                    app.introSound.currentTime = 0
-                } else {
-                    app.introSound.pause()
-                }
-                break;
-            case "toggleIntro":
-                app.toggleIntro()
-                break;
-            case "againSound":
-                app.againSound.play()
-                break;
-        }
-    },
-
-    closeIntro: () => {
-        app.starShine.hide('slow')
-    },
-    toggleIntro: () => {
-        app.starShine.toggle('slow')
-    },
-
-    // Inital function
-    init: () => {
-
-        $.getJSON(app.jsonFile, app.jsonLoaded);
-
-        app.board.find('#hostBTN').on('click', app.makeHost);
-        app.board.find('#awardTeam1').on('click', () => { 
-            app.talkSocket({ data: { trigger: 'awardTeam1', points: app.getTeamPoints(1) } })
-        });
-        app.board.find('#awardTeam2').on('click', () => { 
-            app.talkSocket({ data: { trigger: 'awardTeam2', points: app.getTeamPoints(2) } })
-        });
-        app.board.find('#newQuestion').on('click',() => {
-            app.talkSocket({ data: { trigger: 'newQuestion', currentQ: app.getCurrentQ() } })
-        });
-        app.board.find('#againSound').on('click', { trigger: 'againSound' }, app.talkSocket);
-        app.board.find('#wrong1').on('click', { trigger: 'wrong1' }, app.talkSocket);
-        app.board.find('#wrong2').on('click', { trigger: 'wrong2' }, app.talkSocket);
-        app.board.find('#wrong3').on('click', { trigger: 'wrong3' }, app.talkSocket);
-
-        app.socket.on('listening', app.listenSocket)
-
-
-        let template = $('#starshine .template.shine'),
-            template2 = $('#starshine2 .template.shine'),
-            stars = 10,
-            sparkle = 10;
-
-
-        let size = 'large';
-        let createStar = function (temp, star, sparkle) {
-            temp.clone().removeAttr('id').css({
-                top: (Math.random() * 100) + '%',
-                left: (Math.random() * 100) + '%',
-                webkitAnimationDelay: (Math.random() * sparkle) + 's',
-                mozAnimationDelay: (Math.random() * sparkle) + 's'
-            }).addClass(size).appendTo(star);
-        };
-
-        for (var i = 0; i < stars; i++) {
-            createStar(template, app.starShine, sparkle);
-            createStar(template2, app.starShine2, 0);
-        }
-
-        app.starShine2.hide()
-
-
-        //hotKey
-        document.addEventListener('keydown', e => {
-            if (e.key.toLowerCase() === 's') {
-                e.preventDefault();
-                e.stopPropagation();
-                app.makeHost()
-            }
-            if (e.key.toLowerCase() === 'c') {
-                e.preventDefault();
-                e.stopPropagation();
-                if(app.isHost() && confirm('Clear the board?')) {
-                    app.talkSocket({ data: { trigger: 'clearBoard' } })
-                }
-            }
-            if (e.key.toLowerCase() === 'm') {
-                e.preventDefault();
-                e.stopPropagation();
-                app.talkSocket({ data: { trigger: 'toggleIntroMusic' } })                    
-            }
-            if (e.key.toLowerCase() === 'i') {
-                e.preventDefault();
-                e.stopPropagation();
-                app.talkSocket({ data: { trigger: 'toggleIntro' } }) 
-            }
-            if (e.key.toLowerCase() === 'n') {
-                e.preventDefault();
-                e.stopPropagation();
-                if(app.isHost() && confirm('start New game?')) {
-                    app.talkSocket({ data: { trigger: 'clearScores' } })
-                }
-            }
-        })
+      let parentDiv = holderMain//(i < (qNum / 2)) ? col1 : col2;
+      aLI.on('click', {
+        trigger: 'flipCard',
+        num: i
+      }, app.talkSocket);
+      $(aLI).appendTo(parentDiv)
+      $('.cardHolder').hide().show('slow')
     }
+
+    let cardHolders = app.board.find('.cardHolder');
+    let cards = app.board.find('.card');
+    let backs = app.board.find('.back');
+    let cardSides = app.board.find('.card>div');
+
+    TweenLite.set(cardHolders, {
+      perspective: 800
+    });
+    TweenLite.set(cards, {
+      transformStyle: "preserve-3d"
+    });
+    TweenLite.set(backs, {
+      rotationX: 180
+    });
+    TweenLite.set(cardSides, {
+      backfaceVisibility: "hidden"
+    });
+    cards.data("flipped", false);
+    app.roundInProgress = true
+  },
+  getBoardScore: () => {
+    let cards = app.board.find('.card');
+    let boardScore = app.board.find('#boardScore');
+    let currentScore = {
+      var: boardScore.html()
+    };
+    let score = 0;
+
+    function tallyScore() {
+      if ($(this).data("flipped")) {
+        let value = $(this).find("b").html();
+        score += parseInt(value)
+      }
+    }
+    $.each(cards, tallyScore);
+    TweenMax.to(currentScore, 1, {
+      var: score,
+      onUpdate: function () {
+        boardScore.html(Math.round(currentScore.var));
+      },
+      ease: Power3.easeOut
+    });
+  },
+  getTeamPoints: (num) => {
+    let boardScore = app.board.find('#boardScore');
+    let currentScore = parseInt(boardScore.html())
+    const doublePoints = !!app.board.find('#doublePoints').is(':checked')
+    const tripplePoints = !!app.board.find('#tripplePoints').is(':checked')
+    if (tripplePoints) {
+      currentScore = currentScore * 3
+    } else if (doublePoints) {
+      currentScore = currentScore * 2
+    }
+    let team = app.board.find("#team" + num);
+    let teamScore = parseInt(team.html())
+    return { teamScore, currentScore }
+  },
+  awardPoints: (num, points) => {
+    let boardScore = app.board.find('#boardScore');
+    let currentScore = {
+      var: parseInt(points.currentScore)
+    };
+    let team = app.board.find("#team" + num);
+    let teamScore = {
+      var: parseInt(points.teamScore)
+    };
+    if (currentScore.var > 0) {
+      if(!app.isHost()) app.pointsSound.play()
+      app.starShine2.show()
+      setTimeout(() => {
+        app.starShine2.hide()
+      }, 4000)
+    }
+    let teamScoreUpdated = (teamScore.var + currentScore.var);
+    TweenMax.to(teamScore, 1, {
+      var: teamScoreUpdated,
+      onUpdate: function () {
+        team.html(Math.round(teamScore.var));
+      },
+      ease: Power3.easeOut
+    });
+
+    TweenMax.to(currentScore, 1, {
+      var: 0,
+      onUpdate: function () {
+        boardScore.html(Math.round(currentScore.var));
+      },
+      ease: Power3.easeOut
+    });
+
+    app.roundInProgress = false
+  },
+  changeQuestion: (currentQ) => {
+    app.makeQuestion(currentQ);
+    if (app.isHost()) {
+      app.currentQ = (app.currentQ + 1) % app.questions.length;
+    }
+  },
+  isHost: () => app.role === 'host',
+  makeHost: () => {
+    app.role = "host";
+    app.board.find(".hide").removeClass('hide');
+    app.board.addClass('showHost');
+    app.closeIntro()
+    app.socket.emit("talking", {
+      trigger: 'hostAssigned'
+    });
+  },
+  flipCard: (n) => {
+    let card = $('[data-id="' + n + '"]');
+    let flipped = $(card).data("flipped");
+    if (undefined !== flipped && !flipped) {
+      if(!app.isHost()) app.flipCardSound.play()
+    }
+    let cardRotate = (flipped) ? 0 : -180;
+    TweenLite.to(card, 1, {
+      rotationX: cardRotate,
+      ease: Back.easeOut
+    });
+    flipped = !flipped;
+    $(card).data("flipped", flipped);
+    if(app.roundInProgress)
+    app.getBoardScore()
+  },
+  wrongAnswer: (x) => {
+    if(!app.isHost()) app.strikeSound.play()
+    app.wrong = x
+    let wrong = app.board.find(".wrongBoard")
+    $(wrong).find("img").hide()
+    for (let i = 1; i <= x; i++) {
+      $(wrong).find(`img:nth-child(${i})`).show()
+    }
+    $(wrong).show()
+    setTimeout(() => {
+      $(wrong).hide()
+    }, 1000);
+
+  },
+
+  // Socket Test
+  talkSocket: (e) => {
+    if (app.isHost() || e.data?.trigger?.toLowerCase().includes('intro')) {
+      app.socket.emit("talking", e.data)
+    }
+  },
+  listenSocket: (data) => {
+    switch (data.trigger) {
+      case "newQuestion":
+        app.changeQuestion(data.currentQ);
+        break;
+      case "awardTeam1":
+        app.awardPoints(1, data.points);
+        break;
+      case "awardTeam2":
+        app.awardPoints(2, data.points);
+        break;
+      case "flipCard":
+        app.flipCard(data.num);
+        break;
+      case "hostAssigned":
+        app.board.find('#hostBTN').remove();
+        app.closeIntro()
+        break;
+      case "wrong1":
+        app.wrongAnswer(1)
+        break;
+      case "wrong2":
+        app.wrongAnswer(2)
+        break;
+      case "wrong3":
+        app.wrongAnswer(3)
+        break;
+      case "clearBoard":
+        app.makeQuestion(-1)
+        break;
+      case "clearScores":
+        app.board.find("#team1").html("0")
+        app.board.find("#team2").html("0")
+        break;
+      case "toggleIntroMusic":
+        if (app.introSound.paused) {
+          if(!app.isHost()) app.introSound.play()
+          app.introSound.currentTime = 0
+        } else {
+          app.introSound.pause()
+        }
+        break;
+      case "toggleIntro":
+        app.toggleIntro()
+        break;
+      case "againSound":
+        if(!app.isHost()) app.againSound.play()
+        break;
+      case "speak":
+        app.shouldSpeak = data.speak
+        break;
+      case "speakSpanish":
+        app.shouldSpeakSpanish = data.speak
+        break;
+    }
+  },
+
+  closeIntro: () => {
+    app.starShine.hide('slow')
+  },
+  toggleIntro: () => {
+    app.starShine.toggle('slow')
+  },
+
+  // Inital function
+  init: () => {
+
+    $.getJSON(app.jsonFile, app.jsonLoaded);
+
+    app.board.find('#hostBTN').on('click', app.makeHost);
+    app.board.find('#awardTeam1').on('click', () => {
+      app.talkSocket({ data: { trigger: 'awardTeam1', points: app.getTeamPoints(1) } })
+    });
+    app.board.find('#awardTeam2').on('click', () => {
+      app.talkSocket({ data: { trigger: 'awardTeam2', points: app.getTeamPoints(2) } })
+    });
+    app.board.find('#newQuestion').on('click', () => {
+      app.talkSocket({ data: { trigger: 'newQuestion', currentQ: app.getCurrentQ() } })
+    });
+    app.board.find('#againSound').on('click', { trigger: 'againSound' }, app.talkSocket);
+    app.board.find('#wrong1').on('click', { trigger: 'wrong1' }, app.talkSocket);
+    app.board.find('#wrong2').on('click', { trigger: 'wrong2' }, app.talkSocket);
+    app.board.find('#wrong3').on('click', { trigger: 'wrong3' }, app.talkSocket);
+
+    app.board.find('#spanish').on('change', () => {
+      const shouldSpeak = !!app.board.find('#spanish').is(':checked')
+      app.talkSocket({ data: { trigger: 'speakSpanish', speak: shouldSpeak } })
+    });
+
+    app.board.find('#speech').on('change', () => {
+      const shouldSpeak = !!app.board.find('#speech').is(':checked')
+      app.talkSocket({ data: { trigger: 'speak', speak: shouldSpeak } })
+    });
+
+
+
+
+
+
+    app.socket.on('listening', app.listenSocket)
+
+
+    let template = $('#starshine .template.shine'),
+      template2 = $('#starshine2 .template.shine'),
+      stars = 10,
+      sparkle = 10;
+
+
+    let size = 'large';
+    let createStar = function (temp, star, sparkle) {
+      temp.clone().removeAttr('id').css({
+        top: (Math.random() * 100) + '%',
+        left: (Math.random() * 100) + '%',
+        webkitAnimationDelay: (Math.random() * sparkle) + 's',
+        mozAnimationDelay: (Math.random() * sparkle) + 's'
+      }).addClass(size).appendTo(star);
+    };
+
+    for (var i = 0; i < stars; i++) {
+      createStar(template, app.starShine, sparkle);
+      createStar(template2, app.starShine2, 0);
+    }
+
+    app.starShine2.hide()
+
+
+    //hotKey
+    document.addEventListener('keydown', e => {
+      if (e.key.toLowerCase() === 's') {
+        e.preventDefault();
+        e.stopPropagation();
+        app.makeHost()
+      }
+      if (e.key.toLowerCase() === 'c') {
+        e.preventDefault();
+        e.stopPropagation();
+        if (app.isHost() && confirm('Clear the board?')) {
+          app.talkSocket({ data: { trigger: 'clearBoard' } })
+        }
+      }
+      if (e.key.toLowerCase() === 'm') {
+        e.preventDefault();
+        e.stopPropagation();
+        app.talkSocket({ data: { trigger: 'toggleIntroMusic' } })
+      }
+      if (e.key.toLowerCase() === 'i') {
+        e.preventDefault();
+        e.stopPropagation();
+        app.talkSocket({ data: { trigger: 'toggleIntro' } })
+      }
+      if (e.key.toLowerCase() === 'n') {
+        e.preventDefault();
+        e.stopPropagation();
+        if (app.isHost() && confirm('start New game?')) {
+          app.talkSocket({ data: { trigger: 'clearScores' } })
+        }
+      }
+    })
+  }
 };
 app.init();

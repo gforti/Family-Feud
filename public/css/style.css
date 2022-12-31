@@ -38,7 +38,7 @@ body {
   gap: 5px;
   margin: auto;
   display: grid;
-  grid-template-areas: 
+  grid-template-areas:
     ".        scoreM  .       "
     "scoreT1  main    scoreT2 "
     ".        host    .       ";
@@ -245,7 +245,7 @@ body {
   border: none;
   margin: auto 5px;
   box-sizing: border-box;
-  padding-left: 60px; 
+  padding-left: 60px;
   text-align: left;
   text-shadow: 1px 1px 3px rgba(0, 0, 0, 1), -1px -1px 3px rgba(0, 0, 0, 1), 0 0 5px rgba(0, 0, 0, 1);
 }
@@ -321,7 +321,7 @@ body {
   background: linear-gradient(-45deg, #ee5252, #d3155e, #2373d5, #2338d5, #ee5252, #d3155e, #2373d5, #2338d5, #ee5252, #d3155e, #2373d5, #2338d5);
     background-size: 400% 400%;
     animation: gradient 5s ease infinite;
-}    
+}
 
 @keyframes gradient {
   0% {
@@ -334,7 +334,7 @@ body {
       background-position: 0% 50%;
   }
 }
-    
+
 .shine {
   display: block;
   position: absolute;

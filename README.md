@@ -25,7 +25,7 @@ Listening on 9090
 | i | Toggle intro screen |
 | s | Start the game as the Host |
 | c | Clear the board with nothing (Host Only) |
-| n | Start a new game by clearing out the scoeres (Host Only) |
+| n | Start a new game by clearing out the scores (Host Only) |
 
 ## Play Family Feud
 
